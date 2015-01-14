@@ -70,6 +70,9 @@ public class ForkJoinPoolMonitor implements ForkJoinPoolMonitorMXBean {
     }
 
     @Override
+    public long getNumberOfTasksRetired() { return taskRetiredCount; }
+
+    @Override
     public double getArrivalRate() {
         return (double)numberOfTasksSubmitted / (double)( System.nanoTime() - startTime);
     }

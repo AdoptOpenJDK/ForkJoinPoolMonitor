@@ -14,4 +14,12 @@ hs_err_pid*
 .idea
 demos.iml
 jdk
+gc.log
+
+.gradle
+build.gradle
+gradle
+gradlew
+settings.gradle
+src/com/kodewerk/article/Example.java
 

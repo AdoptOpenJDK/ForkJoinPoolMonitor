@@ -262,7 +262,6 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
             if (U.compareAndSwapInt(this, STATUS, s, s | completion)) {
                 if ((s >>> 16) != 0)
                     synchronized (this) {
-                        ((ForkJoinWorkerThread) Thread.currentThread()).pool.retireTask(this);
                         notifyAll();
                     }
                 return completion;
@@ -707,6 +706,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
         int s;
         if ((s = doJoin() & DONE_MASK) != NORMAL)
             reportException(s);
+        ForkJoinPool.common.getMonitor().retireTask( this);
         return getRawResult();
     }
 
@@ -719,9 +719,11 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * @return the computed result
      */
     public final V invoke() {
+        ForkJoinPool.common.getMonitor().taskSubmitted(this);
         int s;
         if ((s = doInvoke() & DONE_MASK) != NORMAL)
             reportException(s);
+        ForkJoinPool.common.getMonitor().retireTask(this);
         return getRawResult();
     }
 

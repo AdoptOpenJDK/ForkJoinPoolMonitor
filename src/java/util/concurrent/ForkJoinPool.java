@@ -2525,7 +2525,6 @@ public class ForkJoinPool extends AbstractExecutorService {
     public <T> T invoke(ForkJoinTask<T> task) {
         if (task == null)
             throw new NullPointerException();
-        monitor.taskSubmitted(task);
         externalPush(task);
         return task.join();
     }
@@ -2541,7 +2540,6 @@ public class ForkJoinPool extends AbstractExecutorService {
     public void execute(ForkJoinTask<?> task) {
         if (task == null)
             throw new NullPointerException();
-        monitor.taskSubmitted(task);
         externalPush(task);
     }
 
@@ -2560,7 +2558,6 @@ public class ForkJoinPool extends AbstractExecutorService {
             job = (ForkJoinTask<?>) task;
         else
             job = new ForkJoinTask.RunnableExecuteAction(task);
-        monitor.taskSubmitted(job);
         externalPush(job);
     }
 
@@ -2575,7 +2572,6 @@ public class ForkJoinPool extends AbstractExecutorService {
      *         scheduled for execution
      */
     public <T> ForkJoinTask<T> submit(ForkJoinTask<T> task) {
-        monitor.taskSubmitted(task);
         if (task == null)
             throw new NullPointerException();
         externalPush(task);
@@ -2589,7 +2585,6 @@ public class ForkJoinPool extends AbstractExecutorService {
      */
     public <T> ForkJoinTask<T> submit(Callable<T> task) {
         ForkJoinTask<T> job = new ForkJoinTask.AdaptedCallable<T>(task);
-        monitor.taskSubmitted(job);
         externalPush(job);
         return job;
     }
@@ -2601,7 +2596,6 @@ public class ForkJoinPool extends AbstractExecutorService {
      */
     public <T> ForkJoinTask<T> submit(Runnable task, T result) {
         ForkJoinTask<T> job = new ForkJoinTask.AdaptedRunnable<T>(task, result);
-        monitor.taskSubmitted(job);
         externalPush(job);
         return job;
     }
@@ -2619,7 +2613,6 @@ public class ForkJoinPool extends AbstractExecutorService {
             job = (ForkJoinTask<?>) task;
         else
             job = new ForkJoinTask.AdaptedRunnableAction(task);
-        monitor.taskSubmitted(job);
         externalPush(job);
         return job;
     }
