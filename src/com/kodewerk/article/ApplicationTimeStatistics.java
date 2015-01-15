@@ -14,8 +14,16 @@ public class ApplicationTimeStatistics {
 
     public ApplicationTimeStatistics() {}
 
-    public DoubleSummaryStatistics calculate( ArrayList<String> logEntries) throws IOException {
+    public DoubleSummaryStatistics calculateParallelStream( ArrayList<String> logEntries) throws IOException {
         return  logEntries.parallelStream().
+                map(applicationTimePattern::matcher).
+                filter(Matcher::find).
+                mapToDouble(matcher -> Double.parseDouble(matcher.group(2))).
+                summaryStatistics();
+    }
+
+    public DoubleSummaryStatistics calculateStream( ArrayList<String> logEntries) throws IOException {
+        return  logEntries.stream().
                 map(applicationTimePattern::matcher).
                 filter(Matcher::find).
                 mapToDouble(matcher -> Double.parseDouble(matcher.group(2))).

@@ -25,11 +25,11 @@ public class Main {
         ArrayList<String> list = new ArrayList<>();
         Files.lines( new File( "gc.log").toPath()).forEach(element -> list.add(element));
         System.out.println("-gc.log loaded--------------------------------------------------");
-//        System.out.println( "Sequential Total Run Time   : " + ((double)main.sequential(10, list)/ 1000000.0d) + " ms");
-//        main.reportAndClear();
-//        System.out.println( "Concurrent Total Run Time   : " + ((double)main.concurrent(10, list)/ 1000000.0d) + " ms");
-//        main.reportAndClear();
-        System.out.println("Lambda Total Run Time    : " + ((double) main.lambda(10, list) / 1000000.0d) + " ms");
+        System.out.println( "Sequential Total Run Time   : " + ((double)main.sequentialParallelStream(10, list)/ 1000000.0d) + " ms");
+        main.reportAndClear();
+        System.out.println( "Concurrent Total Run Time   : " + ((double)main.concurrentParallelStream(10, list)/ 1000000.0d) + " ms");
+        main.reportAndClear();
+        System.out.println("Lambda Total Run Time    : " + ((double) main.lambdaParallelStream(10, list) / 1000000.0d) + " ms");
         main.report();
 
     }
@@ -79,7 +79,7 @@ public class Main {
         }
     }
 
-    public long lambda(int repeat, ArrayList<String> list) throws IOException {
+    public long lambdaParallelStream(int repeat, ArrayList<String> list) throws IOException {
 
         DoubleSummaryStatistics applicationTimeStatistics = null;
         DoubleSummaryStatistics applicationStoppedTimeStatistics = null;
@@ -87,13 +87,13 @@ public class Main {
         long applicationTimeTimer;
 
         for (int i = 0; i < repeat; i++) {
-            applicationTimeStatistics = new ApplicationTimeStatistics().calculate(list);
+            applicationTimeStatistics = new ApplicationTimeStatistics().calculateParallelStream(list);
         }
         applicationTimeTimer = System.nanoTime() - timer;
 
         long applicationStoppedTimeTimer = System.nanoTime();
         for (int i = 0; i < repeat; i++) {
-            applicationStoppedTimeStatistics = new ApplicationStoppedTimeStatistics().calculate(list);
+            applicationStoppedTimeStatistics = new ApplicationStoppedTimeStatistics().calculateParallelStream(list);
         }
         applicationStoppedTimeTimer = System.nanoTime() - applicationStoppedTimeTimer;
         timer = System.nanoTime() - timer;
@@ -107,7 +107,7 @@ public class Main {
         return timer;
     }
 
-    public long concurrent( int repeat, ArrayList<String> logEntries) {
+    public long concurrentParallelStream( int repeat, ArrayList<String> logEntries) {
 
         ForkJoinTask<DoubleSummaryStatistics> applicationTime;
         ForkJoinTask<DoubleSummaryStatistics> applicationStoppedTime;
@@ -118,8 +118,8 @@ public class Main {
         try {
 
             for ( int i = 0; i < repeat; i++) {
-                applicationTime = ForkJoinPool.commonPool().submit(() -> new ApplicationTimeStatistics().calculate(logEntries));
-                applicationStoppedTime = ForkJoinPool.commonPool().submit(() -> new ApplicationStoppedTimeStatistics().calculate(logEntries));
+                applicationTime = ForkJoinPool.commonPool().submit(() -> new ApplicationTimeStatistics().calculateParallelStream(logEntries));
+                applicationStoppedTime = ForkJoinPool.commonPool().submit(() -> new ApplicationStoppedTimeStatistics().calculateParallelStream(logEntries));
                 applicationTimeStatistics = applicationTime.get();
                 applicationStoppedTimeStatistics = applicationStoppedTime.get();
             }
@@ -139,7 +139,7 @@ public class Main {
         return timer;
     }
 
-    public long sequential(int repeat, ArrayList<String> logEntries) {
+    public long sequentialParallelStream(int repeat, ArrayList<String> logEntries) {
 
         DoubleSummaryStatistics applicationStoppedTimeStatistics = null;
         DoubleSummaryStatistics applicationTimeStatistics = null;
@@ -150,13 +150,13 @@ public class Main {
 
             applicationTimeTimer = timer;
             for (int i = 0; i < repeat; i++) {
-                applicationTimeStatistics = ForkJoinPool.commonPool().submit(() -> new ApplicationTimeStatistics().calculate(logEntries)).get();
+                applicationTimeStatistics = ForkJoinPool.commonPool().submit(() -> new ApplicationTimeStatistics().calculateParallelStream(logEntries)).get();
             }
             applicationTimeTimer = System.nanoTime() - applicationTimeTimer;
 
             applicationStoppedTimeTimer = System.nanoTime();
             for (int i = 0; i < repeat; i++) {
-                applicationStoppedTimeStatistics = ForkJoinPool.commonPool().submit(() -> new ApplicationStoppedTimeStatistics().calculate(logEntries)).get();
+                applicationStoppedTimeStatistics = ForkJoinPool.commonPool().submit(() -> new ApplicationStoppedTimeStatistics().calculateParallelStream(logEntries)).get();
             }
             applicationStoppedTimeTimer = System.nanoTime() - applicationStoppedTimeTimer;
             timer = System.nanoTime() - timer;
