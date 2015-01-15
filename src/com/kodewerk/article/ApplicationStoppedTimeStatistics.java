@@ -1,13 +1,10 @@
 package com.kodewerk.article;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.DoubleSummaryStatistics;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.BaseStream;
-import java.util.stream.Stream;
 
 
 public class ApplicationStoppedTimeStatistics {
@@ -16,8 +13,8 @@ public class ApplicationStoppedTimeStatistics {
 
     public ApplicationStoppedTimeStatistics() {}
 
-    public DoubleSummaryStatistics calculate( File gcLogFile) throws IOException {
-        return Files.lines(gcLogFile.toPath()).parallel().
+    public DoubleSummaryStatistics calculate( ArrayList<String> logEntries) throws IOException {
+        return  logEntries.parallelStream().
                 map(applicationStoppedTimePattern::matcher).
                 filter(Matcher::find).
                 mapToDouble(matcher -> Double.parseDouble(matcher.group(2))).

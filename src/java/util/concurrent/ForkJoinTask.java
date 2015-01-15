@@ -706,7 +706,6 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
         int s;
         if ((s = doJoin() & DONE_MASK) != NORMAL)
             reportException(s);
-        ForkJoinPool.common.getMonitor().retireTask( this);
         return getRawResult();
     }
 

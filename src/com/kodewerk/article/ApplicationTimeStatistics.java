@@ -1,8 +1,7 @@
 package com.kodewerk.article;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.DoubleSummaryStatistics;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -15,8 +14,8 @@ public class ApplicationTimeStatistics {
 
     public ApplicationTimeStatistics() {}
 
-    public DoubleSummaryStatistics calculate( File gcLogFile) throws IOException {
-        return Files.lines(gcLogFile.toPath()).parallel().
+    public DoubleSummaryStatistics calculate( ArrayList<String> logEntries) throws IOException {
+        return  logEntries.parallelStream().
                 map(applicationTimePattern::matcher).
                 filter(Matcher::find).
                 mapToDouble(matcher -> Double.parseDouble(matcher.group(2))).

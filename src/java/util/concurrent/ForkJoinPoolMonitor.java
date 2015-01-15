@@ -49,6 +49,7 @@ public class ForkJoinPoolMonitor implements ForkJoinPoolMonitorMXBean {
      */
 
     public void taskSubmitted( ForkJoinTask task) {
+        System.out.println("Registering : " + Thread.currentThread().getName());
         monitoredTasks.put( task, System.nanoTime());
         numberOfTasksSubmitted++;
     }

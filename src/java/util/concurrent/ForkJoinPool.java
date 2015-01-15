@@ -41,14 +41,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.AbstractExecutorService;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
-import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.RunnableFuture;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.TimeUnit;
 import java.security.AccessControlContext;
 import java.security.ProtectionDomain;
 import java.security.Permissions;
@@ -3368,11 +3360,9 @@ public class ForkJoinPool extends AbstractExecutorService {
         }
     }
 
-    public void retireTask( ForkJoinTask task) {
-        monitor.retireTask( task);
+    public ForkJoinPoolMonitor getMonitor() {
+        return monitor;
     }
-
-    public ForkJoinPoolMonitor getMonitor() { return monitor; }
 
 }
 

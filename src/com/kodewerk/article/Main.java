@@ -10,6 +10,8 @@ import javax.management.ReflectionException;
 import java.io.File;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
+import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.DoubleSummaryStatistics;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
@@ -20,11 +22,14 @@ public class Main {
 
     public static void main(String[] args) throws IOException {
         Main main = new Main();
-        main.sequential( 1);
-        main.reportAndClear();
-        main.overload(1);
-        main.reportAndClear();
-        System.out.println( main.lambda( 10));
+        ArrayList<String> list = new ArrayList<>();
+        Files.lines( new File( "gc.log").toPath()).forEach(element -> list.add(element));
+        System.out.println("-gc.log loaded--------------------------------------------------");
+//        System.out.println( "Sequential Total Run Time   : " + ((double)main.sequential(10, list)/ 1000000.0d) + " ms");
+//        main.reportAndClear();
+//        System.out.println( "Concurrent Total Run Time   : " + ((double)main.concurrent(10, list)/ 1000000.0d) + " ms");
+//        main.reportAndClear();
+        System.out.println("Lambda Total Run Time    : " + ((double) main.lambda(10, list) / 1000000.0d) + " ms");
         main.report();
 
     }
@@ -43,17 +48,18 @@ public class Main {
             ObjectName name = new ObjectName(ForkJoinPoolMonitor.JMX_OBJECT_NAME_BASE + "0");
             try {
 
-                Object attribute = server.getAttribute( name, "ArrivalRate");
-                System.out.println("Arrival Rate : " + attribute);
+                System.out.println("\n-MXBean---------------------------------------------------------");
+                Object attribute = server.getAttribute(name, "ArrivalRate");
+                System.out.println("Arrival Rate              : " + attribute);
 
                 attribute = server.getAttribute( name, "NumberOfTasksSubmitted");
                 System.out.println("Number of Tasks Submitted : " + attribute);
 
                 attribute = server.getAttribute( name, "NumberOfTasksRetired");
-                System.out.println("Number of Tasks Retired : " + attribute);
+                System.out.println("Number of Tasks Retired   : " + attribute);
 
                 attribute = server.getAttribute( name, "AverageTimeInSystem");
-                System.out.println("Average Time In System : " + attribute);
+                System.out.println("Average Time In System    : " + (Double.parseDouble(attribute.toString()) / 1000000.0d) + " ms");
 
                 if ( doClear) {
                     server.invoke( name, "clear" , null, null);
@@ -73,76 +79,101 @@ public class Main {
         }
     }
 
-    public DoubleSummaryStatistics lambda(int repeat) throws IOException {
-        return new ApplicationStoppedTimeStatistics().calculate(new File("gc.log"));
+    public long lambda(int repeat, ArrayList<String> list) throws IOException {
+
+        DoubleSummaryStatistics applicationTimeStatistics = null;
+        DoubleSummaryStatistics applicationStoppedTimeStatistics = null;
+        long timer = System.nanoTime();
+        long applicationTimeTimer;
+
+        for (int i = 0; i < repeat; i++) {
+            applicationTimeStatistics = new ApplicationTimeStatistics().calculate(list);
+        }
+        applicationTimeTimer = System.nanoTime() - timer;
+
+        long applicationStoppedTimeTimer = System.nanoTime();
+        for (int i = 0; i < repeat; i++) {
+            applicationStoppedTimeStatistics = new ApplicationStoppedTimeStatistics().calculate(list);
+        }
+        applicationStoppedTimeTimer = System.nanoTime() - applicationStoppedTimeTimer;
+        timer = System.nanoTime() - timer;
+
+        System.out.println("\n-Lambda---------------------------------------------------------");
+        System.out.println("Concurrent Stats         : " + applicationTimeStatistics);
+        System.out.println("Concurrent Time (client) : " + applicationTimeTimer / 1000000.0d + " ms");
+        System.out.println("Stopped Stats            : " + applicationStoppedTimeStatistics);
+        System.out.println("Stopped Time (client)    : " + applicationStoppedTimeTimer / 1000000.0d + " ms");
+
+        return timer;
     }
 
-    public void overload( int repeat) {
+    public long concurrent( int repeat, ArrayList<String> logEntries) {
 
-        long start;
+        ForkJoinTask<DoubleSummaryStatistics> applicationTime;
+        ForkJoinTask<DoubleSummaryStatistics> applicationStoppedTime;
+        DoubleSummaryStatistics applicationStoppedTimeStatistics = null;
+        DoubleSummaryStatistics applicationTimeStatistics = null;
+        long timer = System.nanoTime();
+
         try {
 
             for ( int i = 0; i < repeat; i++) {
-//                start = System.nanoTime();
-                ForkJoinTask<DoubleSummaryStatistics> applicationStoppedTime = ForkJoinPool.commonPool().submit(() -> new ApplicationStoppedTimeStatistics().calculate(new File("gc.log")));
-                ForkJoinTask<DoubleSummaryStatistics> applicationTime = ForkJoinPool.commonPool().submit(() -> new ApplicationTimeStatistics().calculate(new File("gc.log")));
-//                System.out.println("\n-Concurrent-----------------------------------------------------");
-                System.out.println("Concurrent Stats         : " + applicationTime.get());
-                System.out.println("Stopped Stats            : " + applicationStoppedTime.get());
-//                long timer = System.nanoTime() - start;
-//                System.out.println("Tasks                    : " + ForkJoinPool.commonPool().getMonitor().getNumberOfTasksSubmitted());
-//                System.out.println("Run time (MXBean)        : " + ForkJoinPool.commonPool().getMonitor().getAverageTimeInSystem() / 1000000.0d + " ms");
-//                System.out.println("Total Time (client)      : " + ((double) timer) / 1000000.0d + " ms");
+                applicationTime = ForkJoinPool.commonPool().submit(() -> new ApplicationTimeStatistics().calculate(logEntries));
+                applicationStoppedTime = ForkJoinPool.commonPool().submit(() -> new ApplicationStoppedTimeStatistics().calculate(logEntries));
+                applicationTimeStatistics = applicationTime.get();
+                applicationStoppedTimeStatistics = applicationStoppedTime.get();
             }
+
+            timer = System.nanoTime() - timer;
+            System.out.println("\n-Concurrent-----------------------------------------------------");
+            System.out.println("Concurrent Stats         : " + applicationTimeStatistics);
+            System.out.println("Stopped Stats            : " + applicationStoppedTimeStatistics);
+            System.out.println("Combined Time (client)   : " + ((double) timer) / 1000000.0d + " ms");
+
         } catch (InterruptedException e) {
             e.printStackTrace();
         } catch (ExecutionException e) {
             e.printStackTrace();
         }
+
+        return timer;
     }
 
-    public void sequential(int repeat) {
+    public long sequential(int repeat, ArrayList<String> logEntries) {
 
-        ForkJoinTask<DoubleSummaryStatistics> applicationStoppedTime;
-        ForkJoinTask<DoubleSummaryStatistics> applicationTime;
+        DoubleSummaryStatistics applicationStoppedTimeStatistics = null;
+        DoubleSummaryStatistics applicationTimeStatistics = null;
 
-        long start;
-        DoubleSummaryStatistics stats;
-        double timer, totalTime = 0.0d;
+        long applicationTimeTimer, applicationStoppedTimeTimer = 0, timer = System.nanoTime();
 
         try {
 
-            for (int i = 0; i < repeat; i++){
-                start = System.nanoTime();
-                applicationTime = ForkJoinPool.commonPool().submit(() -> new ApplicationTimeStatistics().calculate(new File("gc.log")));
-                stats = applicationTime.get();
-                timer = (double) (System.nanoTime() - start);
-                totalTime += timer;
-//                System.out.println("\n-Sequential-----------------------------------------------------");
-//                System.out.println("Concurrent Stats         : " + stats);
-//                System.out.println("Tasks                    : " + ForkJoinPool.commonPool().getMonitor().getNumberOfTasksSubmitted());
-//                System.out.println("Run time (MXBean)        : " + ForkJoinPool.commonPool().getMonitor().getAverageTimeInSystem() / 1000000.0d + " ms");
-//                System.out.println("Concurrent Time (client) : " + timer / 1000000.0d + " ms");
-
-
-                start = System.nanoTime();
-                applicationStoppedTime = ForkJoinPool.commonPool().submit(() -> new ApplicationStoppedTimeStatistics().calculate(new File("gc.log")));
-                stats = applicationStoppedTime.get();
-                timer = (double) (System.nanoTime() - start);
-                totalTime += timer;
-//                System.out.println("\n-Sequential-----------------------------------------------------");
-//                System.out.println("Stopped Stats            : " + stats);
-//                System.out.println("Tasks                    : " + ForkJoinPool.commonPool().getMonitor().getNumberOfTasksSubmitted());
-//                System.out.println("Run time (MXBean)        : " + ForkJoinPool.commonPool().getMonitor().getAverageTimeInSystem() / 1000000.0d + " ms");
-//                System.out.println("Stopped Time (client)    : " + timer / 1000000.0d + " ms");
+            applicationTimeTimer = timer;
+            for (int i = 0; i < repeat; i++) {
+                applicationTimeStatistics = ForkJoinPool.commonPool().submit(() -> new ApplicationTimeStatistics().calculate(logEntries)).get();
             }
-//
-//            System.out.println( "Total Run Time           : " + ( totalTime/ 1000000.0d) + " ms");
+            applicationTimeTimer = System.nanoTime() - applicationTimeTimer;
+
+            applicationStoppedTimeTimer = System.nanoTime();
+            for (int i = 0; i < repeat; i++) {
+                applicationStoppedTimeStatistics = ForkJoinPool.commonPool().submit(() -> new ApplicationStoppedTimeStatistics().calculate(logEntries)).get();
+            }
+            applicationStoppedTimeTimer = System.nanoTime() - applicationStoppedTimeTimer;
+            timer = System.nanoTime() - timer;
+
+            System.out.println("\n-Sequential-----------------------------------------------------");
+            System.out.println("Concurrent Stats         : " + applicationTimeStatistics);
+            System.out.println("Concurrent Time (client) : " + applicationTimeTimer / 1000000.0d + " ms");
+            System.out.println("Stopped Stats            : " + applicationStoppedTimeStatistics);
+            System.out.println("Stopped Time (client)    : " + applicationStoppedTimeTimer / 1000000.0d + " ms");
 
         } catch (InterruptedException e) {
             e.printStackTrace();
         } catch (ExecutionException e) {
             e.printStackTrace();
         }
+
+        return timer;
+
     }
 }
