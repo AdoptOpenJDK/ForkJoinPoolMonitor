@@ -25,12 +25,12 @@ public class Main {
         ArrayList<String> list = new ArrayList<>();
         Files.lines( new File( "gc.log").toPath()).forEach(element -> list.add(element));
         System.out.println("-gc.log loaded--------------------------------------------------");
-        System.out.println( "Sequential Total Run Time   : " + ((double)main.sequentialParallelStream(10, list)/ 1000000.0d) + " ms");
+//        System.out.println( "Sequential Total Run Time   : " + ((double)main.sequentialParallelStream(10, list)/ 1000000.0d) + " ms");
+//        main.reportAndClear();
+        System.out.println( "Concurrent Total Run Time   : " + ((double)main.concurrentParallelStream(1, list)/ 1000000.0d) + " ms");
         main.reportAndClear();
-        System.out.println( "Concurrent Total Run Time   : " + ((double)main.concurrentParallelStream(10, list)/ 1000000.0d) + " ms");
-        main.reportAndClear();
-        System.out.println("Lambda Total Run Time    : " + ((double) main.lambdaParallelStream(10, list) / 1000000.0d) + " ms");
-        main.report();
+//        System.out.println("Lambda Total Run Time    : " + ((double) main.lambdaParallelStream(10, list) / 1000000.0d) + " ms");
+//        main.report();
 
     }
 

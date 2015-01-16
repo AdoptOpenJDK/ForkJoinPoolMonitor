@@ -11,7 +11,7 @@ public class ApplicationStoppedTimeStatistics {
 
     private static Pattern applicationStoppedTimePattern = Pattern.compile("(\\d+\\.\\d+): Total time for which application threads were stopped: (\\d+\\.\\d+)");
 
-    public ApplicationStoppedTimeStatistics() {}
+    //public ApplicationStoppedTimeStatistics() {}
 
     public DoubleSummaryStatistics calculateParallelStream( ArrayList<String> logEntries) throws IOException {
         return  logEntries.parallelStream().
