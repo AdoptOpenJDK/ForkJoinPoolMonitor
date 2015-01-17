@@ -48,21 +48,19 @@ public class ForkJoinPoolMonitor implements ForkJoinPoolMonitorMXBean {
      *
      */
 
-    public void taskSubmitted( ForkJoinTask task) {
-        System.out.println("Registering : " + Thread.currentThread().getName());
+    public void submitTask(ForkJoinTask task) {
+        //System.out.println("Registering : " + Thread.currentThread().getName());
         monitoredTasks.put( task, System.nanoTime());
         numberOfTasksSubmitted++;
     }
 
     public void retireTask( ForkJoinTask task) {
-        long startTime;
+        //System.out.println("Retiring : " + Thread.currentThread().getName());
         try {
-            startTime = monitoredTasks.remove(task);
-        } catch (NullPointerException npe) {
-            return;
-        }
-        this.taskRetiredCount++;
-        this.timeInSystem += (double)(System.nanoTime() - startTime);
+            long submitTime = monitoredTasks.remove(task);
+            this.timeInSystem += (double)(System.nanoTime() - submitTime);
+            this.taskRetiredCount++;
+        } catch (NullPointerException npe) {/*silly but NPE is throws if element isn't in map */}
     }
 
     @Override
@@ -74,8 +72,9 @@ public class ForkJoinPoolMonitor implements ForkJoinPoolMonitorMXBean {
     public long getNumberOfTasksRetired() { return taskRetiredCount; }
 
     @Override
-    public double getArrivalRate() {
-        return (double)numberOfTasksSubmitted / (double)( System.nanoTime() - startTime);
+    public double getArrivalIntervalInSeconds() {
+        System.out.println( (System.nanoTime() - startTime)/ 1000000000L);
+        return (double)numberOfTasksSubmitted / (((double)( System.nanoTime() - startTime)) / 1000000000.0d);
     }
 
     @Override

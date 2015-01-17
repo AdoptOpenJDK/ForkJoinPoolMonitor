@@ -718,7 +718,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * @return the computed result
      */
     public final V invoke() {
-        ForkJoinPool.common.getMonitor().taskSubmitted(this);
+        ForkJoinPool.common.getMonitor().submitTask(this);
         int s;
         if ((s = doInvoke() & DONE_MASK) != NORMAL)
             reportException(s);

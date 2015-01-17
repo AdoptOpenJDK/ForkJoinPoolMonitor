@@ -25,12 +25,12 @@ public class Main {
         ArrayList<String> list = new ArrayList<>();
         Files.lines( new File( "gc.log").toPath()).forEach(element -> list.add(element));
         System.out.println("-gc.log loaded--------------------------------------------------");
-//        System.out.println( "Sequential Total Run Time   : " + ((double)main.sequentialParallelStream(10, list)/ 1000000.0d) + " ms");
-//        main.reportAndClear();
-        System.out.println( "Concurrent Total Run Time   : " + ((double)main.concurrentParallelStream(1, list)/ 1000000.0d) + " ms");
+        System.out.println( "Sequential Total Run Time   : " + ((double)main.sequentialParallelStream(10, list)/ 1000000.0d) + " ms");
         main.reportAndClear();
-//        System.out.println("Lambda Total Run Time    : " + ((double) main.lambdaParallelStream(10, list) / 1000000.0d) + " ms");
-//        main.report();
+        System.out.println( "Concurrent Total Run Time   : " + ((double)main.concurrentParallelStream(10, list)/ 1000000.0d) + " ms");
+        main.reportAndClear();
+        System.out.println("Lambda Total Run Time    : " + ((double) main.lambdaParallelStream(10, list) / 1000000.0d) + " ms");
+        main.report();
 
     }
 
@@ -48,18 +48,20 @@ public class Main {
             ObjectName name = new ObjectName(ForkJoinPoolMonitor.JMX_OBJECT_NAME_BASE + "0");
             try {
 
-                System.out.println("\n-MXBean---------------------------------------------------------");
-                Object attribute = server.getAttribute(name, "ArrivalRate");
-                System.out.println("Arrival Rate              : " + attribute);
-
-                attribute = server.getAttribute( name, "NumberOfTasksSubmitted");
+                System.out.println("\n-MXBean Report--------------------------------------------------");
+                Object attribute = server.getAttribute( name, "NumberOfTasksSubmitted");
                 System.out.println("Number of Tasks Submitted : " + attribute);
 
                 attribute = server.getAttribute( name, "NumberOfTasksRetired");
                 System.out.println("Number of Tasks Retired   : " + attribute);
 
-                attribute = server.getAttribute( name, "AverageTimeInSystem");
-                System.out.println("Average Time In System    : " + (Double.parseDouble(attribute.toString()) / 1000000.0d) + " ms");
+                double arrivalInterval = Double.parseDouble(server.getAttribute(name, "ArrivalIntervalInSeconds").toString());
+                System.out.println("Arrival Interval          : " + arrivalInterval + " seconds.");
+
+                double serviceTime = Double.parseDouble(server.getAttribute(name, "AverageTimeInSystem").toString()) / 1000000000.0d;
+                System.out.println("Average Time In System    : " + serviceTime + " seconds.");
+
+                System.out.println("Expected number of tasks  : " + serviceTime / arrivalInterval);
 
                 if ( doClear) {
                     server.invoke( name, "clear" , null, null);
@@ -85,6 +87,8 @@ public class Main {
         DoubleSummaryStatistics applicationStoppedTimeStatistics = null;
         long timer = System.nanoTime();
         long applicationTimeTimer;
+
+        ForkJoinPoolMonitor monitor = new ForkJoinPoolMonitor();
 
         for (int i = 0; i < repeat; i++) {
             applicationTimeStatistics = new ApplicationTimeStatistics().calculateParallelStream(list);
