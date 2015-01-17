@@ -35,33 +35,39 @@ public class Main {
     }
 
     public void reportAndClear() {
-        report( true);
+        report( true, true);
     }
 
     public void report() {
-        report( false);
+        report( true, false);
     }
 
-    private void report( boolean doClear) {
+    public void clear() {
+        report( false, true);
+    }
+
+    private void report( boolean doReport, boolean doClear) {
         try {
             MBeanServer server = ManagementFactory.getPlatformMBeanServer();
             ObjectName name = new ObjectName(ForkJoinPoolMonitor.JMX_OBJECT_NAME_BASE + "0");
             try {
 
-                System.out.println("\n-MXBean Report--------------------------------------------------");
-                Object attribute = server.getAttribute( name, "NumberOfTasksSubmitted");
-                System.out.println("Number of Tasks Submitted : " + attribute);
+                if ( doReport) {
+                    System.out.println("\n-MXBean Report--------------------------------------------------");
+                    Object attribute = server.getAttribute(name, "NumberOfTasksSubmitted");
+                    System.out.println("Number of Tasks Submitted : " + attribute);
 
-                attribute = server.getAttribute( name, "NumberOfTasksRetired");
-                System.out.println("Number of Tasks Retired   : " + attribute);
+                    attribute = server.getAttribute(name, "NumberOfTasksRetired");
+                    System.out.println("Number of Tasks Retired   : " + attribute);
 
-                double arrivalInterval = Double.parseDouble(server.getAttribute(name, "ArrivalIntervalInSeconds").toString());
-                System.out.println("Arrival Interval          : " + arrivalInterval + " seconds.");
+                    double arrivalInterval = Double.parseDouble(server.getAttribute(name, "ArrivalIntervalInSeconds").toString());
+                    System.out.println("Arrival Interval          : " + arrivalInterval + " seconds.");
 
-                double serviceTime = Double.parseDouble(server.getAttribute(name, "AverageTimeInSystem").toString()) / 1000000000.0d;
-                System.out.println("Average Time In System    : " + serviceTime + " seconds.");
+                    double serviceTime = Double.parseDouble(server.getAttribute(name, "AverageTimeInSystem").toString()) / 1000000000.0d;
+                    System.out.println("Average Time In System    : " + serviceTime + " seconds.");
 
-                System.out.println("Expected number of tasks  : " + serviceTime / arrivalInterval);
+                    System.out.println("Expected number of tasks  : " + serviceTime / arrivalInterval);
+                }
 
                 if ( doClear) {
                     server.invoke( name, "clear" , null, null);
@@ -87,8 +93,6 @@ public class Main {
         DoubleSummaryStatistics applicationStoppedTimeStatistics = null;
         long timer = System.nanoTime();
         long applicationTimeTimer;
-
-        ForkJoinPoolMonitor monitor = new ForkJoinPoolMonitor();
 
         for (int i = 0; i < repeat; i++) {
             applicationTimeStatistics = new ApplicationTimeStatistics().calculateParallelStream(list);
@@ -153,9 +157,8 @@ public class Main {
         try {
 
             applicationTimeTimer = timer;
-            for (int i = 0; i < repeat; i++) {
+            for (int i = 0; i < repeat; i++)
                 applicationTimeStatistics = ForkJoinPool.commonPool().submit(() -> new ApplicationTimeStatistics().calculateParallelStream(logEntries)).get();
-            }
             applicationTimeTimer = System.nanoTime() - applicationTimeTimer;
 
             applicationStoppedTimeTimer = System.nanoTime();
