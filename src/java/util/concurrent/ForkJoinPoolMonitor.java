@@ -8,6 +8,7 @@ import javax.management.NotCompliantMBeanException;
 import javax.management.ObjectName;
 import java.lang.management.ManagementFactory;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.LongAdder;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -36,9 +37,9 @@ public class ForkJoinPoolMonitor implements ForkJoinPoolMonitorMXBean {
 
     private ConcurrentHashMap<ForkJoinTask,Long> monitoredTasks = new ConcurrentHashMap<>();
     private long startTime = System.nanoTime();
-    private volatile long numberOfTasksSubmitted = 0L;
+    private LongAdder numberOfTasksSubmitted = new LongAdder();
+    private LongAdder taskRetiredCount = new LongAdder();
     private volatile double timeInSystem = 0.0d;
-    private volatile long taskRetiredCount = 0L;
 
     public ForkJoinPoolMonitor() {}
 
@@ -49,32 +50,32 @@ public class ForkJoinPoolMonitor implements ForkJoinPoolMonitorMXBean {
      */
     public void submitTask(ForkJoinTask task) {
         monitoredTasks.put(task, System.nanoTime());
-        numberOfTasksSubmitted++;
+        numberOfTasksSubmitted.increment();
     }
 
     public void retireTask( ForkJoinTask task) {
         try {
             this.timeInSystem += (double)(System.nanoTime() - monitoredTasks.remove(task));
-            this.taskRetiredCount++;
+            this.taskRetiredCount.increment();
         } catch (NullPointerException npe) {/*silly but NPE is throws if element isn't in map */}
     }
 
     @Override
     public long getNumberOfTasksSubmitted() {
-        return numberOfTasksSubmitted;
+        return numberOfTasksSubmitted.longValue();
     }
 
     @Override
-    public long getNumberOfTasksRetired() { return taskRetiredCount; }
+    public long getNumberOfTasksRetired() { return taskRetiredCount.longValue(); }
 
     @Override
     public double getArrivalIntervalInSeconds() {
-        return (((double)( System.nanoTime() - startTime)) / 1000000000.0d) / (double)numberOfTasksSubmitted;
+        return (((double)( System.nanoTime() - startTime)) / 1000000000.0d) / numberOfTasksSubmitted.doubleValue();
     }
 
     @Override
     public double getAverageTimeInSystem() {
-        double localTasksRetiredCount = (double)this.taskRetiredCount;
+        double localTasksRetiredCount = this.taskRetiredCount.doubleValue();
         double localTimeInSystem = this.timeInSystem;
         if ( localTasksRetiredCount == 0L)
             return 0.0d;
@@ -83,9 +84,9 @@ public class ForkJoinPoolMonitor implements ForkJoinPoolMonitorMXBean {
 
     @Override
     public void clear() {
-        this.numberOfTasksSubmitted = 0L;
+        this.numberOfTasksSubmitted.reset();
+        this.taskRetiredCount.reset();
         this.timeInSystem = 0.0d;
-        this.taskRetiredCount = 0L;
         this.startTime = System.nanoTime();
         monitoredTasks.clear();
     }
