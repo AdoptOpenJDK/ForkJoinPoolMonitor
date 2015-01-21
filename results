@@ -1,0 +1,60 @@
+-Lambda---------------------------------------------------------
+Concurrent Stats         : DoubleSummaryStatistics{count=6153192, sum=22841840.609802, min=0.000020, average=3.712194, max=48.941529}
+Concurrent Time (client) : 107886.433105 ms
+Stopped Stats            : DoubleSummaryStatistics{count=6149277, sum=45503.459518, min=0.000048, average=0.007400, max=17.487807}
+Stopped Time (client)    : 28673.297358 ms
+Lambda Total Run Time    : 136559.731987 ms
+
+
+-Lambda---------------------------------------------------------
+Concurrent Stats         : DoubleSummaryStatistics{count=6153192, sum=22841840.609802, min=0.000020, average=3.712194, max=48.941529}
+Concurrent Time (client) : 38757.529272 ms
+Stopped Stats            : DoubleSummaryStatistics{count=6149277, sum=45503.459518, min=0.000048, average=0.007400, max=17.487807}
+Stopped Time (client)    : 10018.036016 ms
+Lambda Total Run Time    : 48775.565575 ms
+
+-MXBean---------------------------------------------------------
+Arrival Rate              : 4.104256368034353E-10
+Number of Tasks Submitted : 20
+Number of Tasks Retired   : 20
+Average Time In System    : 2435.7412832 ms
+
+-gc.log loaded--------------------------------------------------
+
+-Sequential-----------------------------------------------------
+Concurrent Stats         : DoubleSummaryStatistics{count=6153192, sum=22841840.609802, min=0.000020, average=3.712194, max=48.941529}
+Concurrent Time (client) : 34703.975837 ms
+Stopped Stats            : DoubleSummaryStatistics{count=6149277, sum=45503.459518, min=0.000048, average=0.007400, max=17.487807}
+Stopped Time (client)    : 9251.301873 ms
+Sequential Total Run Time   : 43955.278027 ms
+
+-MXBean---------------------------------------------------------
+Arrival Rate              : 4.5532001681099785E-10
+Number of Tasks Submitted : 20
+Number of Tasks Retired   : 20
+Average Time In System    : 2194.8627558499998 ms
+
+-Concurrent-----------------------------------------------------
+Concurrent Stats         : DoubleSummaryStatistics{count=6153192, sum=22841840.609802, min=0.000020, average=3.712194, max=48.941529}
+Stopped Stats            : DoubleSummaryStatistics{count=6149277, sum=45503.459518, min=0.000048, average=0.007400, max=17.487807}
+Combined Time (client)   : 41393.074718 ms
+Concurrent Total Run Time   : 41393.074718 ms
+
+-MXBean---------------------------------------------------------
+Arrival Rate              : 4.831649862464614E-10
+Number of Tasks Submitted : 20
+Number of Tasks Retired   : 20
+Average Time In System    : 3306.97927025 ms
+
+-Lambda---------------------------------------------------------
+Concurrent Stats         : DoubleSummaryStatistics{count=6153192, sum=22841840.609802, min=0.000020, average=3.712194, max=48.941529}
+Concurrent Time (client) : 31898.262707 ms
+Stopped Stats            : DoubleSummaryStatistics{count=6149277, sum=45503.459518, min=0.000048, average=0.007400, max=17.487807}
+Stopped Time (client)    : 8916.021653 ms
+Lambda Total Run Time    : 40814.284704 ms
+
+-MXBean---------------------------------------------------------
+Arrival Rate              : 4.900161385842561E-10
+Number of Tasks Submitted : 20
+Number of Tasks Retired   : 20
+Average Time In System    : 2040.6181287 ms
