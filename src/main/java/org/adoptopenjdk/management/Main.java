@@ -1,4 +1,4 @@
-package com.kodewerk.article;
+package org.adoptopenjdk.management;
 
 import javax.management.AttributeNotFoundException;
 import javax.management.InstanceNotFoundException;
