@@ -1,4 +1,4 @@
-package org.adoptopenjdk.article;
+package org.adoptopenjdk.management;
 
 import java.io.IOException;
 import java.nio.file.Files;
