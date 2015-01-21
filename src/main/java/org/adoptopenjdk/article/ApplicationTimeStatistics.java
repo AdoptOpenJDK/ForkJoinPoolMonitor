@@ -1,4 +1,4 @@
-package com.kodewerk.article;
+package org.adoptopenjdk.article;
 
 import java.io.IOException;
 import java.nio.file.Files;
