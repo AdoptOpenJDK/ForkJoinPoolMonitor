@@ -21,5 +21,3 @@ build.gradle
 gradle
 gradlew
 settings.gradle
-src/com/kodewerk/article/Example.java
-

@@ -1,5 +1,5 @@
 # ForkJoinPoolMonitorMXBean
-ForkJoinPoolMonitorMXBean for OpenJDK (Java)
+A ForkJoinPool Monitor prototype for possible inclusion into OpenJDK
 
 To run this requires one use modified versions of ForkJoinPool and ForkJoinTask. You can override the OpenJDK implementations using;
 -Xbootclasspath/p:out/production/demos
