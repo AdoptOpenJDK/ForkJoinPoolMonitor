@@ -83,6 +83,16 @@ public class ForkJoinPoolMonitor implements ForkJoinPoolMonitorMXBean {
     }
 
     @Override
+    public double averageNumberOfTasksInSystem() {
+        double localAverageTimeInSystem = getAverageTimeInSystem();
+        double localArrivalIntervalInSeconds = getArrivalIntervalInSeconds();
+        if ( localArrivalIntervalInSeconds == 0.0d) {
+            return 0.0d;
+        }
+        return localAverageTimeInSystem / localArrivalIntervalInSeconds;
+    }
+
+    @Override
     public void clear() {
         this.numberOfTasksSubmitted.reset();
         this.taskRetiredCount.reset();

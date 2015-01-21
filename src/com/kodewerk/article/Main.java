@@ -25,6 +25,7 @@ public class Main {
         Main main = new Main();
         main.runWithLogEntriesPreloaded();
         main.runWithoutLogEntriesPreloaded();
+        main.runWithAndWithOutEntriesPreloaded();
 
     }
 
@@ -42,7 +43,7 @@ public class Main {
         reportAndClear();
         System.out.print("Stream Concurrent Parallel Total Run Time : " + ((double) concurrentParallelStream(10, list) / 1000000.0d) + " ms");
         reportAndClear();
-        System.out.print("Flood Concurrent Parallel                  : " + ((double) floodParallel(10, list) / 1000000.0d) + " ms");
+        System.out.print("Flood Concurrent Parallel, Mixed          : " + ((double) floodParallel(10, list) / 1000000.0d) + " ms");
         reportAndClear();
         System.out.print("Flood Serial Parallel                      : " + ((double) floodSerial(10, list) / 1000000.0d) + " ms");
         reportAndClear();
@@ -62,6 +63,19 @@ public class Main {
         reportAndClear();
         System.out.print("Flood Serial Parallel                      : " + ((double) floodSerial(10, "gc.log") / 1000000.0d) + " ms");
         reportAndClear();
+    }
+
+    private void runWithAndWithOutEntriesPreloaded() throws IOException {
+        ArrayList<String> list = new ArrayList<>();
+        System.out.println("-gc.log preloading----------------------------------------------");
+        Files.lines( new File( "gc.log").toPath()).forEach(element -> list.add(element));
+        System.out.println("-gc.log preloaded-----------------------------------------------");
+//        System.out.print("Stream Concurrent Parallel Total Run Time : " + ((double) concurrentParallelStreamMixed(10, list, new File("gc.log")) / 1000000.0d) + " ms");
+//        reportAndClear();
+        System.out.print("Flood Concurrent Parallel, Mixed          : " + ((double) floodParallelMixed(10, list, new File("gc.log")) / 1000000.0d) + " ms");
+        reportAndClear();
+//        System.out.print("Flood Serial Parallel                      : " + ((double) floodSerialMixed(10, list, new File("gc.log")) / 1000000.0d) + " ms");
+//        reportAndClear();
     }
 
     public void reportAndClear() {
@@ -507,6 +521,39 @@ public class Main {
 
             timer = System.nanoTime() - timer;
             System.out.println("\n-Concurrent Flood Serial----------------------------------------");
+            System.out.println("Combined Time (client)   : " + ((double) timer) / 1000000.0d + " ms");
+
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        }
+
+        return timer;
+    }
+
+    public long floodParallelMixed( int repeat, List logEntries, File logFile) {
+
+        ForkJoinTask<DoubleSummaryStatistics>[] applicationTime = new ForkJoinTask[10];
+        ForkJoinTask<DoubleSummaryStatistics>[] applicationStoppedTime = new ForkJoinTask[10];
+        DoubleSummaryStatistics[] applicationStoppedTimeStatistics = new DoubleSummaryStatistics[10];
+        DoubleSummaryStatistics[] applicationTimeStatistics = new DoubleSummaryStatistics[10];
+        long timer = System.nanoTime();
+
+        try {
+
+            for ( int i = 0; i < repeat; i++) {
+                applicationTime[i] = ForkJoinPool.commonPool().submit(() -> new ApplicationTimeStatistics().calculateParallel(logFile.toPath()));
+                applicationStoppedTime[i] = ForkJoinPool.commonPool().submit(() -> new ApplicationStoppedTimeStatistics().calculateParallel(logEntries));
+            }
+
+            for ( int i = 0; i < repeat; i++) {
+                applicationTimeStatistics[i] = applicationTime[i].get();
+                applicationStoppedTimeStatistics[i] = applicationStoppedTime[i].get();
+            }
+
+            timer = System.nanoTime() - timer;
+            System.out.println("\n-Concurrent Flood Parallel Mixed--------------------------------");
             System.out.println("Combined Time (client)   : " + ((double) timer) / 1000000.0d + " ms");
 
         } catch (InterruptedException e) {
