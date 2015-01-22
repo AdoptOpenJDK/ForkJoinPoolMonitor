@@ -6,6 +6,7 @@ import javax.management.MBeanRegistrationException;
 import javax.management.MalformedObjectNameException;
 import javax.management.NotCompliantMBeanException;
 import javax.management.ObjectName;
+import java.lang.management.ForkJoinPoolMonitorMXBean;
 import java.lang.management.ManagementFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.LongAdder;
@@ -17,7 +18,7 @@ public class ForkJoinPoolMonitor implements ForkJoinPoolMonitorMXBean {
     private static Logger LOGGER = Logger.getLogger( ForkJoinPoolMonitor.class.getName());
     private static AtomicInteger instanceCount = new AtomicInteger(0);
 
-    public static String JMX_OBJECT_NAME_BASE = "com.jclarity:type=forkjoinpool,instance=";
+    public static String JMX_OBJECT_NAME_BASE = "java.util.concurrent:type=forkjoinpool,instance=";
 
     {
         try {
